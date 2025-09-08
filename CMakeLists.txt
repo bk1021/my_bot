@@ -19,6 +19,13 @@ install(TARGETS
   odom_to_tf
   DESTINATION lib/${PROJECT_NAME})
 
+add_executable(cmd_vel_republisher src/cmd_vel_republisher.cpp)
+ament_target_dependencies(cmd_vel_republisher rclcpp geometry_msgs)
+
+install(TARGETS
+  cmd_vel_republisher
+  DESTINATION lib/${PROJECT_NAME})
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights

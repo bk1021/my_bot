@@ -31,7 +31,7 @@ def generate_launch_description():
     )
 
     gazebo = ExecuteProcess(
-        cmd=['gz', 'sim', '-v', '4', os.path.join(share_dir, 'worlds', 'shapes.sdf')],
+        cmd=['gz', 'sim', '-r', '-v', '4', os.path.join(share_dir, 'worlds', 'shapes.sdf')],
         output='screen'
     )
 
@@ -46,26 +46,53 @@ def generate_launch_description():
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist',
-            '/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry',
-            '/joint_states@sensor_msgs/msg/JointState@gz.msgs.Model',
-            '/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan',
-            # '/camera/image_raw@sensor_msgs/msg/Image@gz.msgs.Image',
-            # '/camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
-            '/depth_camera/image@sensor_msgs/msg/Image@gz.msgs.Image',
-            '/depth_camera/depth_image@sensor_msgs/msg/Image@gz.msgs.Image',
-            '/depth_camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
-            '/depth_camera/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked',
+            # '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+            # '/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model',
+            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+            # '/camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
+            # '/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            '/depth_camera/image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/depth_camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/depth_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            '/depth_camera/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
         ],
         output='screen',
     )
 
-    odom_to_tf = Node(
+    # odom_to_tf = Node(
+    #     package='my_bot',
+    #     executable='odom_to_tf',
+    #     name='odom_to_tf',
+    #     output='screen',
+    #     parameters=[{'use_sim_time': True}]
+    # )
+
+    cmd_vel_republisher = Node(
         package='my_bot',
-        executable='odom_to_tf',
-        name='odom_to_tf',
+        executable='cmd_vel_republisher',
+        name='cmd_vel_republisher',
         output='screen',
         parameters=[{'use_sim_time': True}]
+    )
+
+    joint_broad = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['joint_broad', '--switch-timeout', '10'],
+        output='screen'
+    )
+    
+    diff_cont = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=[
+            'diff_cont', '--switch-timeout', '10', 
+            '--controller-ros-args',
+            "--ros-args --remap /diff_cont/cmd_vel:=/cmd_vel_stamped --remap /diff_cont/odom:=/odom"
+        ],
+        output='screen'
     )
 
     rviz_node = Node(
@@ -81,6 +108,9 @@ def generate_launch_description():
         gazebo,
         spawn_entity,
         bridge,
-        odom_to_tf,
+        # odom_to_tf,
+        joint_broad,
+        diff_cont,
+        cmd_vel_republisher,
         rviz_node,
     ])

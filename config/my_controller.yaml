@@ -36,7 +36,7 @@ diff_cont:
     # open_loop: x
     # enable_odom_tf: x
 
-    # cmd_vel_timeout: x
+    cmd_vel_timeout: 3.0
     # publish_limited_velocity: x
     # velocity_rolling_window_size: x
     
